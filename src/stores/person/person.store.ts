@@ -1,5 +1,5 @@
 import { type StateCreator, create } from "zustand";
-import { persist } from "zustand/middleware";
+import { devtools, persist } from "zustand/middleware";
 import { customSessionStorage } from "../storages/session-storage.store";
 
 interface PersonState {
@@ -13,16 +13,24 @@ interface Actions {
 }
 
 // Extrayendo toda la función del store
-const storeAPI: StateCreator<PersonState & Actions> = (set) => ({
+const storeAPI: StateCreator<
+  PersonState & Actions,
+  [["zustand/devtools", never]]
+> = (set) => ({
   firstName: "",
   lastName: "",
-  setFirstName: (value: string) => set({ firstName: value }),
-  setLastName: (value: string) => set({ lastName: value }),
+  // Add name to action on redux devtools
+  setFirstName: (value: string) =>
+    set({ firstName: value }, false, "setFirstName"),
+  setLastName: (value: string) =>
+    set({ lastName: value }, false, "setLastName"),
 });
 
 export const usePersonStore = create<PersonState & Actions>()(
-  persist(storeAPI, {
-    name: "person-store",
-    storage: customSessionStorage,
-  })
+  devtools(
+    persist(storeAPI, {
+      name: "person-store",
+      storage: customSessionStorage,
+    }),
+  ),
 );
